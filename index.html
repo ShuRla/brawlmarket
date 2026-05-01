@@ -1,0 +1,621 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BrawlMarket — Маркет Brawl Stars</title>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@700;800;900&family=Nunito+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0d1b4b;--bg2:#0a1540;--card:#132060;--card2:#1a2d7a;
+  --border:#2a4099;--yellow:#FFD600;--yellow2:#ffe033;--cyan:#00BCD4;
+  --orange:#FF6D00;--green:#69F0AE;--red:#FF5252;--purple:#CE93D8;
+  --blue:#42A5F5;--text:#e8eeff;--muted:#7986cb;
+}
+body{background:var(--bg);color:var(--text);font-family:'Nunito Sans',sans-serif;min-height:100vh;overflow-x:hidden}
+
+/* Layout */
+.site{display:grid;grid-template-columns:230px 1fr;grid-template-rows:auto 1fr;min-height:100vh}
+.sidebar{grid-row:1/3;background:var(--bg2);border-right:2px solid var(--border);display:flex;flex-direction:column;position:sticky;top:0;height:100vh;overflow-y:auto}
+.topbar{grid-column:2;background:var(--bg2);border-bottom:2px solid var(--border);padding:14px 28px;display:flex;align-items:center;gap:16px;position:sticky;top:0;z-index:50}
+.main{grid-column:2;padding:28px;overflow-y:auto}
+
+/* Sidebar */
+.logo{padding:22px 20px;border-bottom:2px solid var(--border);display:flex;align-items:center;gap:10px;flex-shrink:0}
+.logo-star{width:36px;height:36px;background:var(--yellow);clip-path:polygon(50% 0%,61% 35%,98% 35%,68% 57%,79% 91%,50% 70%,21% 91%,32% 57%,2% 35%,39% 35%);flex-shrink:0;animation:spin-star 8s linear infinite}
+@keyframes spin-star{0%{filter:hue-rotate(0deg)}50%{filter:hue-rotate(30deg)}100%{filter:hue-rotate(0deg)}}
+.logo-text{font-family:'Nunito';font-weight:900;font-size:19px;color:var(--yellow);letter-spacing:-0.5px;line-height:1.1}
+.logo-sub{font-size:10px;color:var(--muted);font-weight:700;letter-spacing:1px}
+.nav{padding:14px 0;flex:1}
+.nav-label{padding:12px 20px 5px;font-size:10px;font-weight:800;letter-spacing:2px;color:var(--muted);text-transform:uppercase}
+.nav-item{display:flex;align-items:center;gap:10px;padding:10px 20px;font-size:13px;font-weight:700;color:var(--muted);cursor:pointer;transition:all .2s;border-left:3px solid transparent}
+.nav-item:hover{color:var(--text);background:rgba(255,214,0,.06);border-left-color:rgba(255,214,0,.4)}
+.nav-item.active{color:var(--yellow);background:rgba(255,214,0,.09);border-left-color:var(--yellow)}
+.dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+.sidebar-footer{padding:14px 20px;border-top:2px solid var(--border);flex-shrink:0}
+.count-label{font-size:11px;color:var(--muted);font-weight:700;margin-bottom:4px}
+.count-val{font-family:'Nunito';font-weight:900;font-size:22px;color:var(--yellow)}
+
+/* Topbar */
+.search-wrap{display:flex;align-items:center;gap:8px;background:var(--card2);border:1.5px solid var(--border);border-radius:10px;padding:8px 14px;flex:1;max-width:340px}
+.search-wrap input{background:none;border:none;outline:none;color:var(--text);font-family:'Nunito Sans';font-size:13px;width:100%;font-weight:600}
+.search-wrap input::placeholder{color:var(--muted)}
+.filter-group{display:flex;gap:6px;margin-left:auto}
+.filt{background:var(--card2);border:1.5px solid var(--border);border-radius:8px;padding:7px 13px;color:var(--muted);font-size:12px;font-weight:700;cursor:pointer;font-family:'Nunito Sans';transition:all .2s;white-space:nowrap}
+.filt.on,.filt:hover{border-color:var(--yellow);color:var(--yellow);background:rgba(255,214,0,.08)}
+.gems-badge{display:flex;align-items:center;gap:6px;background:var(--card2);border:1.5px solid var(--border);border-radius:10px;padding:7px 14px;white-space:nowrap}
+.gem-ico{width:15px;height:15px;background:var(--cyan);clip-path:polygon(50% 0%,100% 38%,82% 100%,18% 100%,0% 38%);flex-shrink:0}
+.gems-val{font-weight:900;font-size:14px;font-family:'Nunito';color:var(--cyan)}
+.gems-lbl{font-size:11px;color:var(--muted);font-weight:700}
+
+/* Section */
+.section-hd{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px}
+.section-title{font-family:'Nunito';font-weight:900;font-size:15px;color:var(--yellow);letter-spacing:.5px;text-transform:uppercase}
+.action-link{font-size:12px;font-weight:700;color:var(--muted);cursor:pointer;transition:color .2s;text-decoration:none;background:none;border:none;font-family:'Nunito Sans'}
+.action-link:hover{color:var(--yellow)}
+
+/* Cards grid */
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(185px,1fr));gap:14px;margin-bottom:32px}
+.card{background:var(--card);border:2px solid var(--border);border-radius:14px;overflow:hidden;cursor:pointer;transition:transform .2s,border-color .2s,box-shadow .2s}
+.card:hover{transform:translateY(-5px);border-color:var(--yellow);box-shadow:0 8px 32px rgba(255,214,0,.15)}
+.card-art{height:120px;display:flex;align-items:center;justify-content:center;font-size:52px;position:relative;overflow:hidden}
+.card-art::after{content:'';position:absolute;inset:0;background:rgba(0,0,0,.1)}
+.rarity-bar{height:4px}
+.card-body{padding:12px 14px}
+.card-name{font-family:'Nunito';font-weight:900;font-size:13px;margin-bottom:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--text)}
+.card-sub{font-size:11px;color:var(--muted);font-weight:600;margin-bottom:10px}
+.card-foot{display:flex;align-items:center;justify-content:space-between}
+.price{display:flex;align-items:center;gap:5px;font-family:'Nunito';font-weight:900;font-size:15px;color:var(--text)}
+.buy-btn{background:var(--yellow);color:#1a1200;border:none;border-radius:7px;padding:5px 12px;font-weight:900;font-size:12px;cursor:pointer;font-family:'Nunito';transition:transform .15s,background .2s}
+.buy-btn:hover{transform:scale(1.07);background:var(--yellow2)}
+.buy-btn.trade{background:var(--cyan);color:#001a1a}
+.buy-btn.buy-type{background:var(--green);color:#001a00}
+.badge{position:absolute;top:8px;right:8px;font-size:9px;font-weight:900;padding:3px 8px;border-radius:6px;font-family:'Nunito';letter-spacing:.5px;z-index:2}
+.badge.new-b{background:var(--green);color:#003300}
+.badge.hot-b{background:var(--orange);color:#fff}
+.badge.rare-b{background:var(--purple);color:#1a0030}
+.badge.mine-b{background:var(--yellow);color:#1a1200}
+
+/* Empty state */
+.empty{text-align:center;padding:56px 20px;color:var(--muted)}
+.empty-icon{font-size:56px;margin-bottom:16px;display:block;opacity:.5}
+.empty-title{font-family:'Nunito';font-weight:900;font-size:18px;color:var(--text);margin-bottom:8px}
+.empty-sub{font-size:13px;line-height:1.6}
+.empty-btn{display:inline-block;margin-top:20px;background:var(--yellow);color:#1a1200;border:none;border-radius:10px;padding:11px 24px;font-weight:900;font-size:14px;cursor:pointer;font-family:'Nunito';transition:transform .15s}
+.empty-btn:hover{transform:scale(1.04)}
+
+/* Form */
+.form-box{background:var(--card);border:2px solid var(--border);border-radius:16px;padding:28px;max-width:700px}
+.form-title{font-family:'Nunito';font-weight:900;font-size:18px;color:var(--yellow);margin-bottom:20px;display:flex;align-items:center;gap:10px}
+.tabs{display:flex;gap:4px;margin-bottom:22px;background:var(--card2);border-radius:10px;padding:4px;border:1.5px solid var(--border)}
+.tab{flex:1;padding:9px;text-align:center;font-size:13px;font-weight:800;font-family:'Nunito';cursor:pointer;border-radius:7px;transition:all .2s;color:var(--muted)}
+.tab.on{background:var(--yellow);color:#1a1200}
+.notice{background:rgba(255,214,0,.07);border:1.5px solid rgba(255,214,0,.22);border-radius:10px;padding:10px 14px;font-size:12px;color:#ffe083;font-weight:700;margin-bottom:18px;display:flex;align-items:flex-start;gap:8px;line-height:1.5}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.fg{display:flex;flex-direction:column;gap:6px}
+.fg.full{grid-column:1/3}
+.flabel{font-size:10px;font-weight:800;color:var(--muted);letter-spacing:1.5px;text-transform:uppercase}
+.finput,.fselect,.ftextarea{background:var(--card2);border:1.5px solid var(--border);border-radius:9px;padding:10px 14px;color:var(--text);font-family:'Nunito Sans';font-size:13px;font-weight:600;outline:none;transition:border-color .2s;width:100%}
+.finput:focus,.fselect:focus,.ftextarea:focus{border-color:var(--yellow)}
+.fselect option{background:#132060}
+.ftextarea{min-height:90px;resize:vertical}
+.rarity-row{display:flex;gap:8px;flex-wrap:wrap}
+.rar-opt{padding:7px 16px;border-radius:8px;border:2px solid transparent;font-size:12px;font-weight:800;cursor:pointer;font-family:'Nunito';transition:all .2s;opacity:.55}
+.rar-opt:hover{opacity:.8}
+.rar-opt.sel{opacity:1;border-color:currentColor}
+.submit-btn{width:100%;background:var(--yellow);color:#1a1200;border:none;border-radius:10px;padding:14px;font-weight:900;font-size:15px;cursor:pointer;font-family:'Nunito';letter-spacing:.5px;transition:transform .15s,background .2s;margin-top:8px}
+.submit-btn:hover{transform:scale(1.01);background:var(--yellow2)}
+
+/* Modal overlay */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:100;display:flex;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(4px)}
+.modal{background:var(--card);border:2px solid var(--border);border-radius:18px;padding:28px;max-width:440px;width:100%;position:relative;animation:pop .2s ease}
+@keyframes pop{from{transform:scale(.92);opacity:0}to{transform:scale(1);opacity:1}}
+.modal-close{position:absolute;top:14px;right:14px;background:var(--card2);border:1.5px solid var(--border);border-radius:8px;width:32px;height:32px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--muted);font-size:18px;transition:color .2s}
+.modal-close:hover{color:var(--text)}
+.modal-art{width:80px;height:80px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:44px;margin:0 auto 16px}
+.modal-title{font-family:'Nunito';font-weight:900;font-size:17px;text-align:center;margin-bottom:4px}
+.modal-rarity{text-align:center;font-size:12px;font-weight:700;margin-bottom:16px}
+.modal-table{width:100%;font-size:13px;border-collapse:collapse;margin-bottom:16px}
+.modal-table td{padding:7px 0;vertical-align:top}
+.modal-table td:first-child{color:var(--muted);font-weight:700;width:100px}
+.modal-table td:last-child{color:var(--text);font-weight:600;word-break:break-word}
+.modal-divider{border:none;border-top:1px solid var(--border);margin:12px 0}
+.contact-btn{width:100%;background:var(--yellow);color:#1a1200;border:none;border-radius:10px;padding:13px;font-weight:900;font-size:14px;cursor:pointer;font-family:'Nunito';transition:transform .15s;margin-bottom:8px}
+.contact-btn:hover{transform:scale(1.02);background:var(--yellow2)}
+.delete-btn{width:100%;background:rgba(255,82,82,.12);color:var(--red);border:1.5px solid rgba(255,82,82,.3);border-radius:10px;padding:10px;font-weight:800;font-size:13px;cursor:pointer;font-family:'Nunito';transition:all .2s}
+.delete-btn:hover{background:rgba(255,82,82,.22)}
+
+/* Notification */
+.notif{position:fixed;top:20px;right:20px;background:var(--green);color:#003300;border-radius:10px;padding:12px 20px;font-weight:900;font-size:13px;font-family:'Nunito';z-index:200;animation:slideIn .3s ease,fadeOut .3s ease 2.5s forwards}
+@keyframes slideIn{from{transform:translateX(120%);opacity:0}to{transform:translateX(0);opacity:1}}
+@keyframes fadeOut{to{opacity:0;transform:translateX(120%)}}
+
+/* Responsive */
+@media(max-width:700px){
+  .site{grid-template-columns:1fr}
+  .sidebar{display:none}
+  .topbar{grid-column:1}
+  .main{grid-column:1;padding:16px}
+  .form-grid{grid-template-columns:1fr}
+  .fg.full{grid-column:1}
+}
+</style>
+</head>
+<body>
+
+<div class="site">
+
+<!-- Sidebar -->
+<aside class="sidebar">
+  <div class="logo">
+    <div class="logo-star"></div>
+    <div>
+      <div class="logo-text">BrawlMarket</div>
+      <div class="logo-sub">Торговая площадка</div>
+    </div>
+  </div>
+  <nav class="nav">
+    <div class="nav-label">Навигация</div>
+    <div class="nav-item active" onclick="showPage('market',this)">
+      <div class="dot" style="background:var(--yellow)"></div> Маркет
+    </div>
+    <div class="nav-item" onclick="showPage('create',this)">
+      <div class="dot" style="background:var(--green)"></div> Создать объявление
+    </div>
+    <div class="nav-item" onclick="showPage('my',this)">
+      <div class="dot" style="background:var(--cyan)"></div> Мои объявления
+    </div>
+
+    <div class="nav-label" style="margin-top:10px">Категории</div>
+    <div class="nav-item" onclick="filterCat('Аккаунты',this)">
+      <div class="dot" style="background:var(--orange)"></div> Аккаунты
+    </div>
+    <div class="nav-item" onclick="filterCat('Скины',this)">
+      <div class="dot" style="background:var(--purple)"></div> Скины
+    </div>
+    <div class="nav-item" onclick="filterCat('Бравлеры',this)">
+      <div class="dot" style="background:var(--cyan)"></div> Бравлеры
+    </div>
+    <div class="nav-item" onclick="filterCat('Гемы / Монеты',this)">
+      <div class="dot" style="background:var(--green)"></div> Гемы / Монеты
+    </div>
+    <div class="nav-item" onclick="filterCat('Буст / Тренировки',this)">
+      <div class="dot" style="background:var(--red)"></div> Буст / Тренировки
+    </div>
+  </nav>
+  <div class="sidebar-footer">
+    <div class="count-label">Всего объявлений</div>
+    <div class="count-val" id="total-count">0</div>
+  </div>
+</aside>
+
+<!-- Topbar -->
+<header class="topbar">
+  <div class="search-wrap">
+    <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="var(--muted)" stroke-width="2"><circle cx="6" cy="6" r="4.5"/><path d="M10.5 10.5l3.5 3.5"/></svg>
+    <input type="text" placeholder="Поиск объявлений..." id="search-in" oninput="applyFilters()">
+  </div>
+  <div class="filter-group">
+    <button class="filt on" id="sort-new" onclick="setSort('new',this)">Новые</button>
+    <button class="filt" id="sort-cheap" onclick="setSort('cheap',this)">Дешевле</button>
+    <button class="filt" id="sort-exp" onclick="setSort('exp',this)">Дороже</button>
+  </div>
+  <div class="gems-badge">
+    <div class="gem-ico"></div>
+    <span class="gems-val">∞</span>
+    <span class="gems-lbl">гемов</span>
+  </div>
+</header>
+
+<!-- Main -->
+<main class="main">
+
+  <!-- Market page -->
+  <div id="page-market">
+    <div class="section-hd">
+      <div class="section-title">🏪 Все объявления</div>
+      <button class="action-link" onclick="showPage('create', document.querySelectorAll('.nav-item')[1])">+ Подать объявление</button>
+    </div>
+    <div class="grid" id="market-grid"></div>
+    <div id="market-empty" class="empty" style="display:none">
+      <span class="empty-icon">🔍</span>
+      <div class="empty-title">Объявлений пока нет</div>
+      <div class="empty-sub">Стань первым! Подай объявление и найди покупателей.</div>
+      <button class="empty-btn" onclick="showPage('create', document.querySelectorAll('.nav-item')[1])">Подать объявление</button>
+    </div>
+  </div>
+
+  <!-- Create page -->
+  <div id="page-create" style="display:none">
+    <div class="section-hd"><div class="section-title">✏️ Новое объявление</div></div>
+    <div class="form-box">
+      <div class="tabs">
+        <div class="tab on" onclick="pickType('sell',this)">Продажа</div>
+        <div class="tab" onclick="pickType('buy',this)">Покупка</div>
+        <div class="tab" onclick="pickType('trade',this)">Обмен</div>
+      </div>
+      <div class="notice">
+        ⚠️ Будьте честны в описании. Мошенничество — это плохо. Используйте безопасные способы обмена.
+      </div>
+      <div class="form-grid">
+        <div class="fg">
+          <div class="flabel">Категория</div>
+          <select class="fselect" id="f-cat">
+            <option>Аккаунты</option>
+            <option>Скины</option>
+            <option>Бравлеры</option>
+            <option>Гемы / Монеты</option>
+            <option>Буст / Тренировки</option>
+          </select>
+        </div>
+        <div class="fg">
+          <div class="flabel">Трофеи / Уровень</div>
+          <input class="finput" type="text" placeholder="напр. 80 000 трофеев" id="f-trophies">
+        </div>
+        <div class="fg full">
+          <div class="flabel">Заголовок объявления *</div>
+          <input class="finput" type="text" placeholder="напр. Аккаунт Легенда 80к, все бравлеры" id="f-title" maxlength="80">
+        </div>
+        <div class="fg full">
+          <div class="flabel">Описание *</div>
+          <textarea class="ftextarea" placeholder="Подробно опишите товар: бравлеры, скины, привязка, что входит в сделку..." id="f-desc" maxlength="600"></textarea>
+        </div>
+        <div class="fg">
+          <div class="flabel">Цена (гемы / грн) *</div>
+          <input class="finput" type="number" placeholder="0" id="f-price" min="1">
+        </div>
+        <div class="fg">
+          <div class="flabel">Контакт (Telegram / Discord) *</div>
+          <input class="finput" type="text" placeholder="@username или Discord#0000" id="f-contact">
+        </div>
+        <div class="fg">
+          <div class="flabel">Эмодзи для объявления</div>
+          <select class="fselect" id="f-emoji">
+            <option value="👑">👑 Корона (аккаунт)</option>
+            <option value="💎">💎 Алмаз (гемы)</option>
+            <option value="🤖">🤖 Робот (бравлер)</option>
+            <option value="🦁">🦁 Лев (бравлер)</option>
+            <option value="🔥">🔥 Огонь</option>
+            <option value="⚡">⚡ Молния</option>
+            <option value="🌵">🌵 Кактус</option>
+            <option value="🐺">🐺 Волк</option>
+            <option value="🦊">🦊 Лиса</option>
+            <option value="💀">💀 Череп</option>
+            <option value="🏆">🏆 Кубок</option>
+            <option value="🎮">🎮 Геймпад</option>
+          </select>
+        </div>
+        <div class="fg">
+          <div class="flabel">Ник в игре</div>
+          <input class="finput" type="text" placeholder="Ваш ник в Brawl Stars" id="f-nick">
+        </div>
+        <div class="fg full">
+          <div class="flabel">Редкость / Уровень</div>
+          <div class="rarity-row">
+            <div class="rar-opt sel" style="color:#9E9E9E;background:rgba(158,158,158,.12)" onclick="pickRarity(this)">Обычный</div>
+            <div class="rar-opt" style="color:#42A5F5;background:rgba(66,165,245,.1)" onclick="pickRarity(this)">Редкий</div>
+            <div class="rar-opt" style="color:#AB47BC;background:rgba(171,71,188,.1)" onclick="pickRarity(this)">Эпический</div>
+            <div class="rar-opt" style="color:#FFD600;background:rgba(255,214,0,.1)" onclick="pickRarity(this)">Легендарный</div>
+          </div>
+        </div>
+        <div class="fg full">
+          <button class="submit-btn" onclick="submitAd()">🚀 Опубликовать объявление</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- My ads page -->
+  <div id="page-my" style="display:none">
+    <div class="section-hd">
+      <div class="section-title">📋 Мои объявления</div>
+      <button class="action-link" onclick="clearMyAds()">Удалить все</button>
+    </div>
+    <div class="grid" id="my-grid"></div>
+    <div id="my-empty" class="empty" style="display:none">
+      <span class="empty-icon">📭</span>
+      <div class="empty-title">Ты ещё не подавал объявлений</div>
+      <div class="empty-sub">Подай первое — и оно появится здесь</div>
+      <button class="empty-btn" onclick="showPage('create', document.querySelectorAll('.nav-item')[1])">Подать объявление</button>
+    </div>
+  </div>
+
+</main>
+</div>
+
+<!-- Modal -->
+<div class="modal-overlay" id="modal" style="display:none" onclick="closeModal(event)">
+  <div class="modal" id="modal-box">
+    <button class="modal-close" onclick="closeModalDirect()">✕</button>
+    <div class="modal-art" id="m-art"></div>
+    <div class="modal-title" id="m-title"></div>
+    <div class="modal-rarity" id="m-rarity"></div>
+    <hr class="modal-divider">
+    <table class="modal-table" id="m-table"></table>
+    <button class="contact-btn" id="m-contact-btn"></button>
+    <button class="delete-btn" id="m-delete-btn" style="display:none" onclick="deleteAdFromModal()">🗑 Удалить моё объявление</button>
+  </div>
+</div>
+
+<!-- Notification container -->
+<div id="notif-wrap"></div>
+
+<script>
+const STORAGE_KEY = 'brawlmarket_ads';
+const MY_KEY = 'brawlmarket_my_ids';
+
+let allAds = [];
+let myIds = new Set();
+let curType = 'sell';
+let curRarity = 'Обычный';
+let curSort = 'new';
+let curCat = '';
+let curSearch = '';
+let modalAdId = null;
+
+const rarColors = {
+  'Обычный': '#9E9E9E',
+  'Редкий': '#42A5F5',
+  'Эпический': '#AB47BC',
+  'Легендарный': '#FFD600'
+};
+const bgsByEmoji = {
+  '👑':'#2a1a00','💎':'#001a2a','🤖':'#1a002a','🦁':'#1a1000',
+  '🔥':'#2a0800','⚡':'#001a2a','🌵':'#001a00','🐺':'#1a1a1a',
+  '🦊':'#2a0a00','💀':'#1a001a','🏆':'#1a1200','🎮':'#001a1a'
+};
+
+function load() {
+  try {
+    const stored = localStorage.getItem(STORAGE_KEY);
+    allAds = stored ? JSON.parse(stored) : getDefaultAds();
+    const ids = localStorage.getItem(MY_KEY);
+    myIds = ids ? new Set(JSON.parse(ids)) : new Set();
+  } catch(e) {
+    allAds = getDefaultAds();
+    myIds = new Set();
+  }
+  if (!allAds.length) allAds = getDefaultAds();
+  save();
+}
+
+function save() {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(allAds));
+  localStorage.setItem(MY_KEY, JSON.stringify([...myIds]));
+  document.getElementById('total-count').textContent = allAds.length.toLocaleString('ru');
+}
+
+function getDefaultAds() {
+  return [
+    {id:1,title:'Аккаунт Легенда 80к трофеев',cat:'Аккаунты',desc:'Все бравлеры открыты, много скинов Легенды. Привязан к Supercell ID. Продам безопасно через посредника.',price:4500,contact:'@brawl_seller',rarity:'Легендарный',type:'sell',emoji:'👑',nick:'KingBrawler',trophies:'80 000',date:Date.now()-3600000},
+    {id:2,title:'Скин Dyna Cyber Girl',cat:'Скины',desc:'Редкий эксклюзивный скин на Дину. Передам через смену привязки.',price:850,contact:'@skin_market',rarity:'Эпический',type:'sell',emoji:'🤖',nick:'SkinHunter',trophies:'',date:Date.now()-7200000},
+    {id:3,title:'Буст до Мастера за 1 день',cat:'Буст / Тренировки',desc:'Опыт 5 лет игры. Быстро и безопасно. Подниму до любого ранга. Гарантия результата.',price:300,contact:'@boost_king',rarity:'Редкий',type:'sell',emoji:'⚡',nick:'BoostPro',trophies:'',date:Date.now()-10800000},
+    {id:4,title:'1000 гемов дёшево',cat:'Гемы / Монеты',desc:'Продаю 1000 гемов. Оплата на карту, перевод через безопасную сделку на форуме.',price:1200,contact:'@gemshop_ua',rarity:'Редкий',type:'sell',emoji:'💎',nick:'GemStore',trophies:'',date:Date.now()-14400000},
+    {id:5,title:'Куплю аккаунт 50к+ трофеев',cat:'Аккаунты',desc:'Куплю хороший аккаунт с Легендарными бравлерами. Плачу сразу. Пишите в ТГ.',price:2000,contact:'@buyer_brawl',rarity:'Легендарный',type:'buy',emoji:'🏆',nick:'TopBuyer',trophies:'50 000+',date:Date.now()-18000000},
+    {id:6,title:'Аккаунт 30к трофеев стартовый',cat:'Аккаунты',desc:'Хороший стартовый аккаунт. 20+ бравлеров, несколько редких скинов.',price:600,contact:'@start_acc',rarity:'Обычный',type:'sell',emoji:'🎮',nick:'QuickSell',trophies:'30 000',date:Date.now()-86400000},
+  ];
+}
+
+function getFiltered() {
+  let list = [...allAds];
+  if (curCat) list = list.filter(a => a.cat === curCat);
+  if (curSearch) {
+    const q = curSearch.toLowerCase();
+    list = list.filter(a => a.title.toLowerCase().includes(q) || a.desc.toLowerCase().includes(q) || a.nick.toLowerCase().includes(q));
+  }
+  if (curSort === 'cheap') list.sort((a,b) => a.price - b.price);
+  else if (curSort === 'exp') list.sort((a,b) => b.price - a.price);
+  else list.sort((a,b) => b.date - a.date);
+  return list;
+}
+
+function renderCard(a) {
+  const isNew = (Date.now() - a.date) < 3600000;
+  const isMine = myIds.has(a.id);
+  const badgeHtml = isMine
+    ? '<div class="badge mine-b">МОЁ</div>'
+    : isNew ? '<div class="badge new-b">НОВОЕ</div>' : '';
+  const bg = bgsByEmoji[a.emoji] || '#1a1a3a';
+  const typeLabel = a.type === 'sell' ? 'Продажа' : a.type === 'buy' ? 'Покупка' : 'Обмен';
+  const btnClass = a.type === 'trade' ? 'buy-btn trade' : a.type === 'buy' ? 'buy-btn buy-type' : 'buy-btn';
+  const btnText = a.type === 'sell' ? 'Купить' : a.type === 'buy' ? 'Продать' : 'Обмен';
+  return `<div class="card" onclick="openModal(${a.id})">
+    <div class="card-art" style="background:${bg}">${badgeHtml}<span>${a.emoji}</span></div>
+    <div class="rarity-bar" style="background:${rarColors[a.rarity] || '#9E9E9E'}55;border-top:2px solid ${rarColors[a.rarity] || '#9E9E9E'}88"></div>
+    <div class="card-body">
+      <div class="card-name">${escHtml(a.title)}</div>
+      <div class="card-sub">${escHtml(a.nick||'Аноним')} · ${typeLabel}</div>
+      <div class="card-foot">
+        <div class="price"><div class="gem-ico"></div>${a.price.toLocaleString('ru')}</div>
+        <button class="${btnClass}" onclick="event.stopPropagation();contactDirect(${a.id})">${btnText}</button>
+      </div>
+    </div>
+  </div>`;
+}
+
+function renderMarket() {
+  const list = getFiltered();
+  const grid = document.getElementById('market-grid');
+  const empty = document.getElementById('market-empty');
+  if (!list.length) { grid.innerHTML = ''; empty.style.display = ''; return; }
+  empty.style.display = 'none';
+  grid.innerHTML = list.map(renderCard).join('');
+}
+
+function renderMy() {
+  const list = allAds.filter(a => myIds.has(a.id)).sort((a,b) => b.date - a.date);
+  const grid = document.getElementById('my-grid');
+  const empty = document.getElementById('my-empty');
+  if (!list.length) { grid.innerHTML = ''; empty.style.display = ''; return; }
+  empty.style.display = 'none';
+  grid.innerHTML = list.map(renderCard).join('');
+}
+
+function openModal(id) {
+  const a = allAds.find(x => x.id === id);
+  if (!a) return;
+  modalAdId = id;
+  const bg = bgsByEmoji[a.emoji] || '#1a1a3a';
+  document.getElementById('m-art').style.background = bg;
+  document.getElementById('m-art').textContent = a.emoji;
+  document.getElementById('m-title').textContent = a.title;
+  const rc = rarColors[a.rarity] || '#9E9E9E';
+  document.getElementById('m-rarity').innerHTML = `<span style="color:${rc};font-weight:800">${a.rarity}</span> · ${a.cat}`;
+  const typeLabel = a.type === 'sell' ? '💰 Продажа' : a.type === 'buy' ? '🛒 Покупка' : '🔄 Обмен';
+  const rows = [
+    ['Цена', `<span style="font-family:Nunito;font-weight:900;font-size:15px">${a.price.toLocaleString('ru')} 💎</span>`],
+    ['Тип', typeLabel],
+    ['Продавец', escHtml(a.nick || 'Аноним')],
+    a.trophies ? ['Трофеи', escHtml(a.trophies)] : null,
+    ['Описание', `<span style="color:var(--muted)">${escHtml(a.desc)}</span>`],
+    ['Дата', new Date(a.date).toLocaleDateString('ru-RU')],
+  ].filter(Boolean);
+  document.getElementById('m-table').innerHTML = rows.map(([k,v]) =>
+    `<tr><td>${k}</td><td>${v}</td></tr>`).join('');
+  const isMine = myIds.has(id);
+  const cb = document.getElementById('m-contact-btn');
+  cb.textContent = `📩 Написать: ${a.contact}`;
+  cb.onclick = () => contactDirect(id);
+  document.getElementById('m-delete-btn').style.display = isMine ? '' : 'none';
+  document.getElementById('modal').style.display = 'flex';
+  document.body.style.overflow = 'hidden';
+}
+
+function closeModal(e) {
+  if (e.target === document.getElementById('modal')) closeModalDirect();
+}
+function closeModalDirect() {
+  document.getElementById('modal').style.display = 'none';
+  document.body.style.overflow = '';
+  modalAdId = null;
+}
+
+function deleteAdFromModal() {
+  if (!modalAdId) return;
+  if (!confirm('Удалить это объявление?')) return;
+  allAds = allAds.filter(a => a.id !== modalAdId);
+  myIds.delete(modalAdId);
+  save();
+  closeModalDirect();
+  notify('Объявление удалено');
+  renderMarket();
+  renderMy();
+}
+
+function contactDirect(id) {
+  const a = allAds.find(x => x.id === id);
+  if (!a) return;
+  alert(`Контакт продавца:\n${a.contact}\n\nОбъявление: ${a.title}`);
+}
+
+function showPage(p, navEl) {
+  ['market','create','my'].forEach(x => document.getElementById('page-'+x).style.display = 'none');
+  document.getElementById('page-'+p).style.display = '';
+  document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+  if (navEl) navEl.classList.add('active');
+  if (p === 'market') renderMarket();
+  if (p === 'my') renderMy();
+}
+
+function filterCat(cat, el) {
+  curCat = curCat === cat ? '' : cat;
+  document.querySelectorAll('.nav-item').forEach(x => x.classList.remove('active'));
+  if (curCat) { el.classList.add('active'); }
+  else { document.querySelectorAll('.nav-item')[0].classList.add('active'); }
+  showPage('market', null);
+}
+
+function applyFilters() {
+  curSearch = document.getElementById('search-in').value;
+  renderMarket();
+}
+
+function setSort(s, btn) {
+  curSort = s;
+  document.querySelectorAll('.filt').forEach(b => b.classList.remove('on'));
+  btn.classList.add('on');
+  renderMarket();
+}
+
+function pickType(t, el) {
+  curType = t;
+  document.querySelectorAll('.tab').forEach(x => x.classList.remove('on'));
+  el.classList.add('on');
+}
+
+function pickRarity(el) {
+  document.querySelectorAll('.rar-opt').forEach(x => x.classList.remove('sel'));
+  el.classList.add('sel');
+  curRarity = el.textContent.trim();
+}
+
+function submitAd() {
+  const title = document.getElementById('f-title').value.trim();
+  const desc = document.getElementById('f-desc').value.trim();
+  const price = parseInt(document.getElementById('f-price').value) || 0;
+  const contact = document.getElementById('f-contact').value.trim();
+  const cat = document.getElementById('f-cat').value;
+  const emoji = document.getElementById('f-emoji').value;
+  const nick = document.getElementById('f-nick').value.trim() || 'Я';
+  const trophies = document.getElementById('f-trophies').value.trim();
+
+  if (!title) { shake('f-title'); notify('Введи заголовок!', 'error'); return; }
+  if (!desc) { shake('f-desc'); notify('Добавь описание!', 'error'); return; }
+  if (!price || price <= 0) { shake('f-price'); notify('Укажи цену!', 'error'); return; }
+  if (!contact) { shake('f-contact'); notify('Укажи контакт!', 'error'); return; }
+
+  const newAd = {
+    id: Date.now(),
+    title, cat, desc, price, contact, rarity: curRarity,
+    type: curType, emoji, nick, trophies,
+    date: Date.now()
+  };
+  allAds.unshift(newAd);
+  myIds.add(newAd.id);
+  save();
+
+  ['f-title','f-desc','f-price','f-contact','f-nick','f-trophies'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.value = '';
+  });
+
+  notify('🎉 Объявление опубликовано!');
+  showPage('my', document.querySelectorAll('.nav-item')[2]);
+}
+
+function clearMyAds() {
+  if (!myIds.size) { notify('Нет твоих объявлений', 'error'); return; }
+  if (!confirm(`Удалить все ${myIds.size} твоих объявлений?`)) return;
+  allAds = allAds.filter(a => !myIds.has(a.id));
+  myIds.clear();
+  save();
+  renderMy();
+  notify('Все твои объявления удалены');
+}
+
+function shake(id) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.style.borderColor = 'var(--red)';
+  setTimeout(() => el.style.borderColor = '', 1500);
+}
+
+function notify(msg, type) {
+  const div = document.createElement('div');
+  div.className = 'notif';
+  if (type === 'error') { div.style.background = 'var(--red)'; div.style.color = '#fff'; }
+  div.textContent = msg;
+  document.getElementById('notif-wrap').appendChild(div);
+  setTimeout(() => div.remove(), 3000);
+}
+
+function escHtml(str) {
+  return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+load();
+renderMarket();
+</script>
+</body>
+</html>
